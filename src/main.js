@@ -1,13 +1,16 @@
 import { TodoService } from './TodoService.js';
 import { TodoRenderer } from './TodoRenderer.js';
 import { LocalStorageHandler } from './LocalStorageHandler.js';
+import { TodoController } from './TodoController.js';
 
 // Composition root: the only place that decides which storage the app uses.
 window.addEventListener('DOMContentLoaded', () => {
     const storage = new LocalStorageHandler();
     const service = new TodoService(storage);
-    const renderer = new TodoRenderer('task-container', service);
-    renderer.render();
+    const renderer = new TodoRenderer('task-container');
+    const controller = new TodoController(service, renderer);
+    renderer.setController(controller);
+    controller.start();
 
     const input = document.getElementById('task-input');
     const addBtn = document.getElementById('add-task-btn');
@@ -23,26 +26,21 @@ window.addEventListener('DOMContentLoaded', () => {
     updateUndoButton();
 
     addBtn.addEventListener('click', () => {
-        const task = service.addTask(input.value, 'simple');
-        if (task) {
+        if (controller.addTask(input.value, 'simple')) {
             input.value = '';
-            renderer.render(task.id);
             updateUndoButton();
         }
     });
 
     addUrgentBtn.addEventListener('click', () => {
-        const task = service.addTask(input.value, 'urgent');
-        if (task) {
+        if (controller.addTask(input.value, 'urgent')) {
             input.value = '';
-            renderer.render(task.id);
             updateUndoButton();
         }
     });
 
     undoBtn.addEventListener('click', () => {
-        if (service.undo()) {
-            renderer.render();
+        if (controller.undo()) {
             updateUndoButton();
         }
     });
